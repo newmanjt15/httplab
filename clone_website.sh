@@ -2,7 +2,7 @@
 
 # parameters
 test_id=`date +%s`
-res_folder="../wget_results/$test_id"
+res_folder="./wget_results/$test_id"
 url_file="./.url"
 depth=0
 
@@ -34,6 +34,8 @@ then
         url_file=$1
     fi
 fi
+
+# echo "$base_url"
 
 upload_page () {
     url=$1
@@ -86,10 +88,9 @@ download_page () {
     echo "$res_folder/$domain/$name"
 }
 
-mkdir -p $res_folder
-
 log_file=$res_folder"/"$test_id".test_log"
 
 (download_page "$base_url" > $log_file 2>&1)
+# download_page "$base_url"
 
 echo `cat $log_file`
