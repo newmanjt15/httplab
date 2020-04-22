@@ -6,13 +6,22 @@ import (
 	"log"
 	// "net"
 	"net/http"
-	"crypto/tls"
+	// "crypto/tls"
 	// "crypto/x509"
+	"strings"
 )
 
 type Page struct {
 	Title string
 	Body []byte
+}
+
+type Order struct {
+	URL string
+	status bool
+	finished bool
+	loc string
+	result string
 }
 
 
@@ -77,15 +86,25 @@ func pingAttendant (a *Attendant) {
 
 }
 
-func forwardOrder (order string, a *Attendant){
-	_, err :=http.Get("https://" + a.domain + ":8080/request")
+func checkOrder (order string, a *Attendant){
+result, err :=http.Get("https://" + a.domain + ":8080/" + order)
 	if err != nil {
 		return
 	}
-
+	fmt.Println("check complete")
+	fmt.Println(result)
 }
 
-func runMaster (orders chan string) {
+func forwardOrder (order string, a *Attendant){
+	result, err :=http.Get("https://" + a.domain + ":8080/" + order)
+	if err != nil {
+		return
+	}
+	fmt.Println("order complete")
+	fmt.Println(result)
+}
+
+func runMaster (orders chan string, check_chan chan string) {
 	// list of attendants
 	var attendants [2]*Attendant
 	// fill ones we know of now
@@ -104,6 +123,9 @@ func runMaster (orders chan string) {
 		case c:= <-orders:
 				fmt.Println("Received order for: " + c)
 				forwardOrder(c, attendants[1])
+		case c:= <-check_chan:
+				fmt.Println("received check for: " + c)
+				checkOrder(c, attendants[1])
 		}
 	}
 
@@ -112,11 +134,42 @@ func runMaster (orders chan string) {
 
 func main() {
 	order_chan := make(chan string)
-	srv := &http.Server{
-		Addr: ":443",
-		Handler: &handler{Orders: order_chan},
-		TLSConfig: &tls.Config{},
-	}
-	go runMaster(order_chan)
-	log.Fatal(srv.ListenAndServeTLS("/etc/letsencrypt/live/testmyprotocol.com/fullchain.pem", "/etc/letsencrypt/live/testmyprotocol.com/privkey.pem"))
+	check_chan := make(chan string)
+	var orders [10]Order
+	x := 0
+	// srv := &http.Server{
+	// 	Addr: ":8080",
+	// 	Handler: &handler{Orders: order_chan},
+	// 	TLSConfig: &tls.Config{},
+	// }
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "incoming") {
+			fmt.Println("received data")
+			fmt.Println(r.URL.Path)
+			// got result, store it for now
+			parts := strings.Split(r.URL.Path, "-")
+			fmt.Println(parts)
+			for i, n := range orders {
+				if parts[1] == n.URL {
+					fmt.Println("updating order")
+					fmt.Println(parts[2])
+					orders[i].loc = parts[2]
+				}
+			}
+		}else{
+			url := r.URL.Path[1:]
+			for _, n := range orders {
+				if url == n.URL {
+					w.Write([]byte(n.loc[1:]))
+					return
+				}
+			}
+			orders[x] = Order{URL: url, loc: "nowhere"}
+			x += 1
+			order_chan <- url
+		}
+	})
+	go runMaster(order_chan, check_chan)
+	// log.Fatal(srv.ListenAndServeTLS("/etc/letsencrypt/live/testmyprotocol.com/fullchain.pem", "/etc/letsencrypt/live/testmyprotocol.com/privkey.pem"))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
