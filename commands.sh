@@ -21,9 +21,9 @@ fi
 
 if [[ " ${acceptale_commands[@]} " =~ " ${cong_con} " ]]; then
     if [ "$cong_con" == "cubic" ]; then
-        echo `sudo cp ../cubic_sysctl.conf /etc/sysctl.conf`
+        echo `sudo cp ./cubic_sysctl.conf /etc/sysctl.conf`
     elif [ "$cong_con" == "bbr" ]; then
-        echo `sudo cp ../bbr_sysctl.conf /etc/sysctl.conf`
+        echo `sudo cp ./bbr_sysctl.conf /etc/sysctl.conf`
     fi
     # (sudo sysctl --system > $log_file 2>&1)
     echo `sudo sysctl --system `
