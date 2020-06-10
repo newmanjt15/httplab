@@ -3,26 +3,6 @@
 # parameters
 test_id=`date +%s`
 res_folder="./wget_results/$test_id"
-url_file="./.url"
-depth=0
-
-mkdir -p $res_folder
-chmod -R 777 $res_folder
-
-# grab any arguments
-# while getopts ":d:" opt; do
-#     case ${opt} in
-#         d )
-#             shift
-#             depth=$OPTARG
-#             shift
-#             ;;
-#         \? )
-#             echo "Invalid Option: -$OPTARG" 1>&2
-#             exit 1
-#             ;;
-#     esac
-# done
 
 if [ $# -eq 1 ]
 then
@@ -33,7 +13,24 @@ then
     else
         url_file=$1
     fi
+elif [ $# -eq 2 ]
+then
+    if [[ "$1" == *"https://"* ]] || [[ "$1" == *"http://"* ]]
+    then
+        # echo "$1" > $url_file
+        base_url=$1
+    else
+        url_file=$1
+    fi
+    res_folder=$2
 fi
+url_file="./.url"
+depth=0
+
+mkdir -p $res_folder
+chmod -R 777 $res_folder
+
+
 
 # echo "$base_url"
 
