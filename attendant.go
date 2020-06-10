@@ -111,5 +111,5 @@ func main() {
                 TLSConfig: &tls.Config{},
         }
 	go run_attendant(order_chan, url_chan, orders, location_chan)
-        log.Fatal(srv.ListenAndServeTLS("/etc/letsencrypt/live/h3.testmyprotocol.com/fullchain.pem", "/etc/letsencrypt/live/h3.testmyprotocol.com/privkey.pem"))
+        log.Fatal(srv.ListenAndServeTLS("/etc/letsencrypt/live/h2.testmyprotocol.com/fullchain.pem", "/etc/letsencrypt/live/h2.testmyprotocol.com/privkey.pem"))
 }
